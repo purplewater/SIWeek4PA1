@@ -1,0 +1,155 @@
+---
+title: "Exponential Distribution and CLT"
+output: html_document
+---
+
+
+# Part 1 Exponetial and CLT
+
+## Overview
+
+#### In this project, I will investigate the exponential distribution in R and compare it with the Central Limit Theorem: the distribution of averages of 40 exponentials with a thousand simulations.
+
+## Show the sample mean and compare it to the theoretical mean of the distribution.
+
+#### Theortical Mean
+
+```{r}
+lambda <- 0.2
+T_mean <- 1/lambda
+print(T_mean)
+```
+
+
+
+#### Sample Mean
+```{r}
+mns = NULL
+for (i in 1 : 1000) mns = c(mns, mean(rexp(40,lambda)))
+S_mean<-mean(mns)
+print(S_mean)
+head(mns)
+```
+
+
+#### compare distribution
+```{r}
+hist(mns, main="The distribution of 1000 averges of 40 random exponetials", xlab="Value of means", ylab="Frequecy of means", col="blue")
+abline(v=T_mean, lty=1, lwd=5, col="red")
+legend("topright", lty=1, lwd=5, col="red", legend="theoretical mean")
+```
+
+## Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
+
+#### Theortical variance
+```{r}
+T_variance <- (1/lambda)^2
+print(T_variance)
+```
+
+#### Sample variance
+```{r}
+vns = NULL
+for (i in 1 : 1000) vns = c(vns, var(rexp(40,lambda)))
+S_variance <- var(vns)
+print(S_variance)
+head(vns)
+```
+
+#### compare distribution
+```{r}
+hist(vns, main="The distribution of 1000 variance of 40 random exponetials", xlab="Value of variances", ylab="Frequecy of variances", col="blue")
+abline(v=T_variance, lty=1, lwd=5, col="red")
+legend("topright", lty=1, lwd=5, col="red", legend="theoretical variance")
+```
+
+
+
+## Show that the distribution is approximately normal:focus on the difference between the distribution of a large collection of random exponentials and the distribution of a large collection of averages of 40 exponentials.
+
+```{r}
+ns = NULL
+for (i in 1 : 1000) ns = c(ns, rexp(40,lambda))
+
+par(mfrow = c(3, 1))
+hist(ns, main = "Distribution of exponentials with lambda equals to 0.2", xlab = "Exponentials", col = "yellow")
+hist(mns, main = "The distribution of 1000 averages of 40 random exponentials", xlab = "Value of means", ylab = "Frequency of means", col = "blue")
+Norm <- rnorm(1000, mean = mean(mns), sd = sd(mns))
+hist(Norm, main = "A normal distribution with theoretical mean and sd of the exponentials", xlab = "Normal variables", col = "red")
+```
+
+#### summary: as a result of the central limit theorem, comparing the second and the third histogram, we can see the distribution of the means is similar to a real normal distribution with the same mean and standard deviation.
+
+
+# Part 2 ToothGrowth Analysis
+
+## Overview : analyze tooth growth data and have some conclusions
+
+#### load data/libarary, basic summary and explore data
+```{r}
+library(ggplot2)
+data("ToothGrowth")
+dim(ToothGrowth)
+head(ToothGrowth)
+summary(ToothGrowth)
+```
+
+#### plot and see the trend
+```{r}
+ggplot(ToothGrowth, aes(x = dose, y=len, color=supp)) +
+  geom_point() + geom_smooth(method = "lm")+
+  labs(title = "ToothGrowth trend based on supplements", x = "Dose of supplement ", y = "Length of teeth")
+```
+
+#### initial conclusions:
+
+* supplment and tooth growth are linear relationship
+* same dose, OJ has bigger effect compared with VC
+* VC has larger gradient of increase compared with OJ
+
+#### Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose
+#### assumption -- normal distribution, null hypothesis -- no difference between mean of 2 kinds of supplements or dose
+```{r}
+t.test(x = ToothGrowth$len, data = ToothGrowth, paired = FALSE, conf.level = 0.95)$conf.
+```
+#### calculate confidence level and p value based on kind of supplement
+```{r}
+t.test(ToothGrowth[ToothGrowth$supp == "OJ", ]$len)$p.value
+t.test(ToothGrowth[ToothGrowth$supp == "OJ", ]$len)$conf.int
+t.test(ToothGrowth[ToothGrowth$supp == "VC", ]$len)$p.value
+t.test(ToothGrowth[ToothGrowth$supp == "VC", ]$len)$conf.int
+```
+
+####  calculate confidence level and p value based on dose
+```{r}
+t.test(ToothGrowth[ToothGrowth$dose == 0.5, ]$len)$p.value
+t.test(ToothGrowth[ToothGrowth$dose == 0.5, ]$len)$conf.int
+t.test(ToothGrowth[ToothGrowth$dose == 1, ]$len)$p.value
+t.test(ToothGrowth[ToothGrowth$dose == 1, ]$len)$conf.int
+t.test(ToothGrowth[ToothGrowth$dose == 2, ]$len)$p.value
+t.test(ToothGrowth[ToothGrowth$dose == 2, ]$len)$conf.int
+```
+
+
+#### calculate mean based on dose for each supplement
+
+```{r}
+dose05 <-ToothGrowth[ToothGrowth$dose == 0.5, ]
+mean(dose05[dose05$supp=="OJ",]$len)
+mean(dose05[dose05$supp=="VC",]$len)
+```
+
+```{r}
+dose1 <-ToothGrowth[ToothGrowth$dose == 1, ]
+mean(dose1[dose1$supp=="OJ",]$len)
+mean(dose1[dose1$supp=="VC",]$len)
+```
+
+```{r}
+dose2 <-ToothGrowth[ToothGrowth$dose == 2, ]
+mean(dose2[dose1$supp=="OJ",]$len)
+mean(dose2[dose1$supp=="VC",]$len)
+```
+
+#### OJ delivers more tooth growht than VC for dose 0.5 & 1. OJ and VC deliver same tooth growth for dose 2.
+
